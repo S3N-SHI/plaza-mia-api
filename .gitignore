@@ -1,0 +1,17 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+plaza-mia-api
+*.test
+*.out
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.local
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
