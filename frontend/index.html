@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plaza Mía — Sistema de Fidelización</title>
+  <style>
+    :root {
+      --green: #2ecc71;
+      --green-dark: #27ae60;
+      --bg: #0f1419;
+      --panel: #1a2029;
+      --panel2: #141b23;
+      --txt: #e6edf3;
+      --muted: #8b949e;
+      --border: #2d333b;
+      --danger: #f85149;
+      --warn: #e67e22;
+      --info: #3498db;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: var(--bg); color: var(--txt); min-height: 100vh; }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+    }
+    .nav-brand { color: var(--green); font-weight: bold; font-size: 16px; }
+    .nav-right { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+    .badge {
+      background: var(--green);
+      color: #000;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge.gold   { background: #f1c40f; }
+    .badge.silver { background: #bdc3c7; }
+    .badge.bronze { background: #cd6133; color: #fff; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 16px 24px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+    }
+    .tab {
+      padding: 8px 18px;
+      border-radius: 6px 6px 0 0;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+    }
+    .tab.active { background: var(--panel); color: var(--green); border-bottom: 2px solid var(--green); }
+
+    /* ── LAYOUT ── */
+    .container { padding: 24px; max-width: 1100px; margin: 0 auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── PANELS ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .panel h3 { font-size: 14px; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── FORM ── */
+    label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #0d1117;
+      color: var(--txt);
+      font-size: 14px;
+    }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row > div { flex: 1; min-width: 140px; }
+
+    /* ── BUTTONS ── */
+    button {
+      padding: 9px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .btn-primary { background: var(--green); color: #000; }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-sec { background: var(--border); color: var(--txt); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-warn { background: var(--warn); color: #fff; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; margin-top: 0; }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: normal; font-size: 12px; }
+    tr:hover td { background: #ffffff08; }
+    .acciones { display: flex; gap: 6px; }
+
+    /* ── STATUS ── */
+    #estado {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 0;
+      min-height: 20px;
+    }
+    .ok  { color: var(--green) !important; }
+    .err { color: var(--danger) !important; }
+
+    /* ── AUTH SCREEN ── */
+    #auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+    .auth-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 32px;
+      width: 360px;
+    }
+    .auth-box h2 { color: var(--green); margin-bottom: 6px; }
+    .auth-box p  { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: transparent;
+    }
+    .auth-tab.active { background: var(--green); color: #000; border-color: var(--green); }
+
+    /* ── PERFIL CARD ── */
+    .perfil-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .nivel-circle {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .nivel-circle.gold   { background: #f1c40f22; border: 3px solid #f1c40f; color: #f1c40f; }
+    .nivel-circle.silver { background: #bdc3c722; border: 3px solid #bdc3c7; color: #bdc3c7; }
+    .nivel-circle.bronze { background: #cd613322; border: 3px solid #cd6133; color: #cd6133; }
+    .stat { text-align: center; }
+    .stat-val { font-size: 28px; font-weight: bold; color: var(--green); }
+    .stat-lbl { font-size: 11px; color: var(--muted); }
+
+    /* ── RECOMPENSA CARD ── */
+    .recompensas-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+    .recompensa-card {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      width: 220px;
+    }
+    .recompensa-card h4 { font-size: 14px; margin-bottom: 6px; }
+    .recompensa-card p  { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .puntos-req { color: var(--green); font-weight: bold; font-size: 13px; }
+
+    /* ── DISPONIBILIDAD ── */
+    .disponibilidad-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .cancha-card {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      min-width: 160px;
+    }
+    .cancha-card h4 { font-size: 14px; margin-bottom: 4px; }
+    .cancha-card span { font-size: 12px; color: var(--muted); }
+    .cancha-card .precio { color: var(--green); font-weight: bold; font-size: 13px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════ AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <h2>🏓 Plaza Mía</h2>
+    <p>Sistema de Fidelización Digital</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="mostrarAuthTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" onclick="mostrarAuthTab('register')">Registrarse</button>
+    </div>
+
+    <div id="auth-login">
+      <label>Email</label>
+      <input id="login-email" type="email" placeholder="tu@email.com" />
+      <label>Contraseña</label>
+      <input id="login-pass" type="password" placeholder="••••••••" />
+      <button class="btn-primary" style="width:100%;margin-top:16px" onclick="login()">Entrar</button>
+    </div>
+
+    <div id="auth-register" style="display:none">
+      <label>Nombre</label>
+      <input id="reg-nombre" placeholder="Tu nombre" />
+      <label>Email</label>
+      <input id="reg-email" type="email" placeholder="tu@email.com" />
+      <label>Contraseña</label>
+      <input id="reg-pass" type="password" placeholder="••••••••" />
+      <label>Rol</label>
+      <select id="reg-rol">
+        <option value="jugador">Jugador</option>
+        <option value="administrador">Administrador</option>
+      </select>
+      <button class="btn-primary" style="width:100%;margin-top:16px" onclick="registrar()">Crear cuenta</button>
+    </div>
+
+    <p id="auth-msg" style="margin-top:12px;font-size:13px;min-height:18px"></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ APP -->
+<div id="app" style="display:none">
+
+  <nav>
+    <span class="nav-brand">🏓 Plaza Mía</span>
+    <div class="nav-right">
+      <span id="nav-nombre"></span>
+      <span id="nav-nivel" class="badge bronze"></span>
+      <span id="nav-puntos" style="color:var(--green);font-weight:bold"></span>
+      <button class="btn-sec btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="tabs">
+    <button class="tab active" onclick="mostrarTab('canchas')">🏟 Canchas</button>
+    <button class="tab" onclick="mostrarTab('reservas')">📅 Reservas</button>
+    <button class="tab" onclick="mostrarTab('fidelizacion')">⭐ Fidelización</button>
+    <button class="tab admin-only" onclick="mostrarTab('admin')" style="display:none">⚙️ Admin</button>
+  </div>
+
+  <div class="container">
+    <div id="estado"></div>
+
+    <!-- ── CANCHAS ── -->
+    <div id="page-canchas" class="page active">
+      <div class="panel">
+        <h3>Buscar disponibilidad</h3>
+        <div class="row">
+          <div><label>Fecha</label><input type="date" id="disp-fecha" /></div>
+          <div><label>Hora inicio</label><input type="time" id="disp-hi" /></div>
+          <div><label>Hora fin</label><input type="time" id="disp-hf" /></div>
+        </div>
+        <button class="btn-primary" onclick="buscarDisponibles()">Buscar canchas libres</button>
+      </div>
+      <div class="panel">
+        <h3>Canchas disponibles</h3>
+        <div id="disponibilidad-grid" class="disponibilidad-grid">
+          <p style="color:var(--muted);font-size:13px">Usa el buscador para ver disponibilidad.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Todas las canchas</h3>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Deporte</th><th>Precio/hora</th><th>Estado</th></tr></thead>
+          <tbody id="tabla-canchas"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── RESERVAS ── -->
+    <div id="page-reservas" class="page">
+      <div class="panel">
+        <h3>Nueva reserva</h3>
+        <div class="row">
+          <div>
+            <label>Cancha ID</label>
+            <input type="number" id="res-cancha" placeholder="1" />
+          </div>
+          <div>
+            <label>Fecha</label>
+            <input type="date" id="res-fecha" />
+          </div>
+          <div>
+            <label>Hora inicio</label>
+            <input type="time" id="res-hi" />
+          </div>
+          <div>
+            <label>Hora fin</label>
+            <input type="time" id="res-hf" />
+          </div>
+        </div>
+        <button class="btn-primary" onclick="crearReserva()">Reservar</button>
+      </div>
+      <div class="panel">
+        <h3>Mis reservas</h3>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Cancha</th><th>Fecha</th><th>Horario</th><th>Estado</th><th>Puntos</th><th></th></tr>
+          </thead>
+          <tbody id="tabla-reservas"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── FIDELIZACIÓN ── -->
+    <div id="page-fidelizacion" class="page">
+      <div class="panel">
+        <h3>Mi perfil</h3>
+        <div class="perfil-card" id="perfil-card">
+          <p style="color:var(--muted);font-size:13px">Cargando perfil…</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Recompensas disponibles</h3>
+        <div id="recompensas-grid" class="recompensas-grid"></div>
+      </div>
+      <div class="panel">
+        <h3>Historial de canjes</h3>
+        <table>
+          <thead><tr><th>ID</th><th>Recompensa</th><th>Fecha</th></tr></thead>
+          <tbody id="tabla-canjes"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── ADMIN ── -->
+    <div id="page-admin" class="page">
+      <div class="panel">
+        <h3>Registrar nueva cancha</h3>
+        <div class="row">
+          <div><label>Nombre</label><input id="adm-nombre" placeholder="Padel 4" /></div>
+          <div>
+            <label>Deporte</label>
+            <select id="adm-deporte">
+              <option value="padel">Pádel</option>
+              <option value="ping_pong">Ping Pong</option>
+            </select>
+          </div>
+          <div><label>Precio/hora</label><input type="number" id="adm-precio" step="0.01" placeholder="15.00" /></div>
+        </div>
+        <button class="btn-primary" onclick="crearCancha()">Crear cancha</button>
+      </div>
+      <div class="panel">
+        <h3>Gestión de canchas</h3>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Deporte</th><th>Precio</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tabla-admin-canchas"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h3>Todas las reservas</h3>
+        <table>
+          <thead><tr><th>ID</th><th>Cancha</th><th>Usuario</th><th>Fecha</th><th>Estado</th><th>Puntos</th></tr></thead>
+          <tbody id="tabla-admin-reservas"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /app -->
+
+<script>
+  const API = 'http://localhost:8080/api/v1';
+  const $ = id => document.getElementById(id);
+  let TOKEN = localStorage.getItem('plaza_token') || '';
+  let ROL   = localStorage.getItem('plaza_rol')   || '';
+  let NOMBRE = localStorage.getItem('plaza_nombre') || '';
+
+  // ── HELPERS ──────────────────────────────────────────────────────────────
+
+  function estado(msg, tipo = '') {
+    const el = $('estado');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = tipo;
+    if (msg) setTimeout(() => { el.textContent = ''; el.className = ''; }, 4000);
+  }
+
+  function headers() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
+  }
+
+  async function api(method, path, body) {
+    const opts = { method, headers: headers() };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+    return data;
+  }
+
+  // ── AUTH ──────────────────────────────────────────────────────────────────
+
+  function mostrarAuthTab(tab) {
+    $('auth-login').style.display    = tab === 'login'    ? 'block' : 'none';
+    $('auth-register').style.display = tab === 'register' ? 'block' : 'none';
+    document.querySelectorAll('.auth-tab').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+    });
+  }
+
+  async function login() {
+    try {
+      const data = await api('POST', '/auth/login', {
+        email: $('login-email').value,
+        password: $('login-pass').value,
+      });
+      guardarSesion(data.token);
+    } catch (e) {
+      $('auth-msg').textContent = '❌ ' + e.message;
+      $('auth-msg').style.color = 'var(--danger)';
+    }
+  }
+
+  async function registrar() {
+    try {
+      await api('POST', '/auth/register', {
+        nombre:   $('reg-nombre').value,
+        email:    $('reg-email').value,
+        password: $('reg-pass').value,
+        rol:      $('reg-rol').value,
+      });
+      $('auth-msg').textContent = '✅ Cuenta creada. Inicia sesión.';
+      $('auth-msg').style.color = 'var(--green)';
+      mostrarAuthTab('login');
+    } catch (e) {
+      $('auth-msg').textContent = '❌ ' + e.message;
+      $('auth-msg').style.color = 'var(--danger)';
+    }
+  }
+
+  function guardarSesion(token) {
+    TOKEN = token;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    ROL = payload.rol;
+    localStorage.setItem('plaza_token', token);
+    localStorage.setItem('plaza_rol', ROL);
+    mostrarApp();
+  }
+
+  function logout() {
+    localStorage.removeItem('plaza_token');
+    localStorage.removeItem('plaza_rol');
+    localStorage.removeItem('plaza_nombre');
+    TOKEN = ROL = NOMBRE = '';
+    $('auth-screen').style.display = 'flex';
+    $('app').style.display = 'none';
+  }
+
+  function mostrarApp() {
+    $('auth-screen').style.display = 'none';
+    $('app').style.display = 'block';
+    if (ROL === 'administrador') {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'inline-block');
+    }
+    cargarTodo();
+  }
+
+  // ── TABS ──────────────────────────────────────────────────────────────────
+
+  function mostrarTab(tab) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    $('page-' + tab).classList.add('active');
+    event.target.classList.add('active');
+    if (tab === 'canchas')      cargarCanchas();
+    if (tab === 'reservas')     cargarReservas();
+    if (tab === 'fidelizacion') cargarFidelizacion();
+    if (tab === 'admin')        cargarAdmin();
+  }
+
+  // ── CANCHAS ───────────────────────────────────────────────────────────────
+
+  async function cargarCanchas() {
+    try {
+      const canchas = await api('GET', '/canchas');
+      const tbody = $('tabla-canchas');
+      tbody.innerHTML = '';
+      (canchas || []).forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${c.id}</td>
+          <td>${c.nombre}</td>
+          <td>${c.deporte === 'padel' ? '🎾 Pádel' : '🏓 Ping Pong'}</td>
+          <td style="color:var(--green)">$${c.precio_hora}</td>
+          <td>${c.activa ? '<span style="color:var(--green)">● Activa</span>' : '<span style="color:var(--muted)">● Inactiva</span>'}</td>`;
+        tbody.appendChild(tr);
+      });
+    } catch (e) { estado('Error cargando canchas: ' + e.message, 'err'); }
+  }
+
+  async function buscarDisponibles() {
+    const fecha = $('disp-fecha').value;
+    const hi    = $('disp-hi').value;
+    const hf    = $('disp-hf').value;
+    if (!fecha || !hi || !hf) { estado('Completa fecha, hora inicio y hora fin', 'err'); return; }
+    try {
+      const canchas = await api('GET', `/canchas/disponibilidad?fecha=${fecha}&hora_inicio=${hi}&hora_fin=${hf}`);
+      const grid = $('disponibilidad-grid');
+      grid.innerHTML = '';
+      if (!canchas || canchas.length === 0) {
+        grid.innerHTML = '<p style="color:var(--warn);font-size:13px">Sin canchas disponibles en ese horario.</p>';
+        return;
+      }
+      canchas.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'cancha-card';
+        div.innerHTML = `
+          <h4>${c.nombre}</h4>
+          <span>${c.deporte === 'padel' ? '🎾 Pádel' : '🏓 Ping Pong'}</span>
+          <div class="precio">$${c.precio_hora}/hora</div>
+          <button class="btn-primary btn-sm" style="margin-top:8px" onclick="precargarReserva(${c.id})">Reservar</button>`;
+        grid.appendChild(div);
+      });
+    } catch (e) { estado('Error: ' + e.message, 'err'); }
+  }
+
+  function precargarReserva(canchaID) {
+    $('res-cancha').value = canchaID;
+    $('res-fecha').value  = $('disp-fecha').value;
+    $('res-hi').value     = $('disp-hi').value;
+    $('res-hf').value     = $('disp-hf').value;
+    mostrarTabDirecto('reservas');
+    estado('Cancha ' + canchaID + ' precargada ✓', 'ok');
+  }
+
+  // ── RESERVAS ──────────────────────────────────────────────────────────────
+
+  async function cargarReservas() {
+    try {
+      const reservas = await api('GET', '/reservas/mias');
+      const tbody = $('tabla-reservas');
+      tbody.innerHTML = '';
+      (reservas || []).forEach(r => {
+        const hi = r.hora_inicio ? r.hora_inicio.substring(11,16) : '--';
+        const hf = r.hora_fin    ? r.hora_fin.substring(11,16)    : '--';
+        const fecha = r.fecha    ? r.fecha.substring(0,10)         : '--';
+        const colEstado = r.estado === 'cancelada' ? 'var(--danger)' :
+                          r.estado === 'completada' ? 'var(--green)' : 'var(--warn)';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.id}</td>
+          <td>${r.cancha ? r.cancha.nombre : 'Cancha ' + r.cancha_id}</td>
+          <td>${fecha}</td>
+          <td>${hi} - ${hf}</td>
+          <td><span style="color:${colEstado}">${r.estado}</span></td>
+          <td style="color:var(--green)">${r.puntos_otorgados > 0 ? '+' + r.puntos_otorgados + ' pts' : '—'}</td>
+          <td class="acciones">
+            ${r.estado === 'pendiente' || r.estado === 'confirmada'
+              ? `<button class="btn-danger btn-sm" onclick="cancelarReserva(${r.id})">Cancelar</button>`
+              : ''}
+          </td>`;
+        tbody.appendChild(tr);
+      });
+      if (!reservas || reservas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:20px">Sin reservas aún.</td></tr>';
+      }
+    } catch (e) { estado('Error cargando reservas: ' + e.message, 'err'); }
+  }
+
+  async function crearReserva() {
+    const canchaID = parseInt($('res-cancha').value);
+    const fecha    = $('res-fecha').value;
+    const hi       = $('res-hi').value;
+    const hf       = $('res-hf').value;
+    if (!canchaID || !fecha || !hi || !hf) { estado('Completa todos los campos', 'err'); return; }
+    try {
+      const r = await api('POST', '/reservas', {
+        cancha_id:   canchaID,
+        fecha:       fecha,
+        hora_inicio: hi,
+        hora_fin:    hf,
+      });
+      estado(`✅ Reserva creada — +${r.puntos_otorgados} puntos acreditados`, 'ok');
+      $('res-cancha').value = $('res-fecha').value = $('res-hi').value = $('res-hf').value = '';
+      cargarReservas();
+      actualizarNavPerfil();
+    } catch (e) { estado('❌ ' + e.message, 'err'); }
+  }
+
+  async function cancelarReserva(id) {
+    if (!confirm('¿Cancelar esta reserva?')) return;
+    try {
+      await api('PATCH', `/reservas/${id}/cancelar`);
+      estado('Reserva cancelada', 'ok');
+      cargarReservas();
+    } catch (e) { estado('❌ ' + e.message, 'err'); }
+  }
+
+  // ── FIDELIZACIÓN ──────────────────────────────────────────────────────────
+
+  async function cargarFidelizacion() {
+    await Promise.all([cargarPerfil(), cargarRecompensas(), cargarHistorial()]);
+  }
+
+  async function cargarPerfil() {
+    try {
+      const j = await api('GET', '/fidelizacion/perfil');
+      const card = $('perfil-card');
+      const nivel = j.nivel || 'bronze';
+      card.innerHTML = `
+        <div class="nivel-circle ${nivel}">${nivel}</div>
+        <div class="stat"><div class="stat-val">${j.puntos_totales}</div><div class="stat-lbl">Puntos totales</div></div>
+        <div class="stat"><div class="stat-val">${j.racha_semanas}</div><div class="stat-lbl">Semanas seguidas</div></div>
+        <div style="font-size:13px;color:var(--muted)">
+          <div><b style="color:var(--txt)">Bronze</b> — menos de 5 reservas/mes</div>
+          <div><b style="color:#bdc3c7">Silver</b> — 5 a 9 reservas/mes</div>
+          <div><b style="color:#f1c40f">Gold</b> — 10+ reservas/mes</div>
+        </div>`;
+      actualizarNav(j);
+    } catch (e) { estado('Error cargando perfil: ' + e.message, 'err'); }
+  }
+
+  async function cargarRecompensas() {
+    try {
+      const recompensas = await api('GET', '/fidelizacion/recompensas');
+      const grid = $('recompensas-grid');
+      grid.innerHTML = '';
+      (recompensas || []).forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'recompensa-card';
+        div.innerHTML = `
+          <h4>${r.nombre}</h4>
+          <p>${r.descripcion || ''}</p>
+          <div class="puntos-req">🏅 ${r.puntos_requeridos} puntos</div>
+          <button class="btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="canjear(${r.id}, '${r.nombre}', ${r.puntos_requeridos})">
+            Canjear
+          </button>`;
+        grid.appendChild(div);
+      });
+    } catch (e) { estado('Error cargando recompensas: ' + e.message, 'err'); }
+  }
+
+  async function canjear(id, nombre, puntos) {
+    if (!confirm(`¿Canjear "${nombre}" por ${puntos} puntos?`)) return;
+    try {
+      await api('POST', '/fidelizacion/canjear', { recompensa_id: id });
+      estado(`✅ Canjeaste "${nombre}" con éxito`, 'ok');
+      cargarFidelizacion();
+      actualizarNavPerfil();
+    } catch (e) { estado('❌ ' + e.message, 'err'); }
+  }
+
+  async function cargarHistorial() {
+    try {
+      const canjes = await api('GET', '/fidelizacion/historial');
+      const tbody = $('tabla-canjes');
+      tbody.innerHTML = '';
+      (canjes || []).forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${c.id}</td>
+          <td>${c.recompensa ? c.recompensa.nombre : 'Recompensa ' + c.recompensa_id}</td>
+          <td>${c.canjeado_en ? c.canjeado_en.substring(0,10) : '--'}</td>`;
+        tbody.appendChild(tr);
+      });
+      if (!canjes || canjes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:20px">Sin canjes aún.</td></tr>';
+      }
+    } catch (e) { estado('Error cargando historial: ' + e.message, 'err'); }
+  }
+
+  // ── ADMIN ─────────────────────────────────────────────────────────────────
+
+  async function cargarAdmin() {
+    try {
+      const [canchas, reservas] = await Promise.all([
+        api('GET', '/canchas'),
+        api('GET', '/reservas'),
+      ]);
+
+      const tbody = $('tabla-admin-canchas');
+      tbody.innerHTML = '';
+      (canchas || []).forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${c.id}</td>
+          <td>${c.nombre}</td>
+          <td>${c.deporte}</td>
+          <td>$${c.precio_hora}</td>
+          <td>${c.activa ? '<span style="color:var(--green)">Activa</span>' : '<span style="color:var(--muted)">Inactiva</span>'}</td>
+          <td class="acciones">
+            <button class="btn-danger btn-sm" onclick="borrarCancha(${c.id})">Eliminar</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      const tbody2 = $('tabla-admin-reservas');
+      tbody2.innerHTML = '';
+      (reservas || []).forEach(r => {
+        const colEstado = r.estado === 'cancelada' ? 'var(--danger)' :
+                          r.estado === 'completada' ? 'var(--green)' : 'var(--warn)';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.id}</td>
+          <td>${r.cancha ? r.cancha.nombre : r.cancha_id}</td>
+          <td>${r.usuario_id}</td>
+          <td>${r.fecha ? r.fecha.substring(0,10) : '--'}</td>
+          <td><span style="color:${colEstado}">${r.estado}</span></td>
+          <td style="color:var(--green)">${r.puntos_otorgados > 0 ? '+' + r.puntos_otorgados : '—'}</td>`;
+        tbody2.appendChild(tr);
+      });
+    } catch (e) { estado('Error cargando admin: ' + e.message, 'err'); }
+  }
+
+  async function crearCancha() {
+    const nombre  = $('adm-nombre').value;
+    const deporte = $('adm-deporte').value;
+    const precio  = parseFloat($('adm-precio').value);
+    if (!nombre || !precio) { estado('Nombre y precio son requeridos', 'err'); return; }
+    try {
+      await api('POST', '/canchas', { nombre, deporte, precio_hora: precio, activa: true });
+      estado('✅ Cancha creada', 'ok');
+      $('adm-nombre').value = $('adm-precio').value = '';
+      cargarAdmin();
+      cargarCanchas();
+    } catch (e) { estado('❌ ' + e.message, 'err'); }
+  }
+
+  async function borrarCancha(id) {
+    if (!confirm('¿Eliminar esta cancha?')) return;
+    try {
+      await api('DELETE', `/canchas/${id}`);
+      estado('Cancha eliminada', 'ok');
+      cargarAdmin();
+    } catch (e) { estado('❌ ' + e.message, 'err'); }
+  }
+
+  // ── NAV PERFIL ────────────────────────────────────────────────────────────
+
+  async function actualizarNavPerfil() {
+    try {
+      const j = await api('GET', '/fidelizacion/perfil');
+      actualizarNav(j);
+    } catch (_) {}
+  }
+
+  function actualizarNav(j) {
+    const nivel = j.nivel || 'bronze';
+    const navNivel = $('nav-nivel');
+    navNivel.textContent = nivel.charAt(0).toUpperCase() + nivel.slice(1);
+    navNivel.className = 'badge ' + nivel;
+    $('nav-puntos').textContent = j.puntos_totales + ' pts';
+  }
+
+  function mostrarTabDirecto(tab) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    $('page-' + tab).classList.add('active');
+    document.querySelectorAll('.tab').forEach(t => {
+      if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(tab)) t.classList.add('active');
+    });
+  }
+
+  // ── INICIO ────────────────────────────────────────────────────────────────
+
+  async function cargarTodo() {
+    const payload = TOKEN ? JSON.parse(atob(TOKEN.split('.')[1])) : null;
+    if (payload) {
+      ROL = payload.rol;
+      if (ROL === 'administrador') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'inline-block');
+      }
+    }
+    await cargarCanchas();
+    await actualizarNavPerfil();
+  }
+
+  // Si ya hay token guardado, ir directo a la app
+  if (TOKEN) {
+    $('auth-screen').style.display = 'none';
+    $('app').style.display = 'block';
+    cargarTodo();
+  }
+</script>
+</body>
+</html>
